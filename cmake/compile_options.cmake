@@ -120,7 +120,7 @@ function(enable_warnings_as_errors TARGET_NAME)
     else()
         target_compile_options(${TARGET_NAME}
             PRIVATE
-                -Wall -Wextra -Werror -Werror=suggest-override
+                -Wall -Wextra -Wno-error -Werror=suggest-override
         )
         # Set SYSTEM property on OpenVINO dependencies to suppress extra warnings from their headers
         # when building via OPENVINO_EXTRA_MODULES

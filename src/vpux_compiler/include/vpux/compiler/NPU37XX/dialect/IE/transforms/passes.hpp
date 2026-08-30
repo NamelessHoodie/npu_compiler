@@ -54,6 +54,20 @@ struct DefaultHWOptions : public IE::DefaultHWOptionsDialectBase, virtual vpux::
     BoolOption enableNCEEltwiseMultiply{*this, "enable-nce-eltwise-multiply",
                                         llvm::cl::desc("Enable NCE Eltwise for Multiply with [1,C,1,1] shape"),
                                         llvm::cl::init(false)};
+
+    // SDPA/Attention fusion options (ported from NPU40XX for LLM inference)
+    BoolOption enableConvertToAttention{*this, "convert-to-attention",
+                                        llvm::cl::desc("Enable conversion to Attention"),
+                                        llvm::cl::init(false)};
+    BoolOption enableFuseSoftwareSDPA{*this, "fuse-software-sdpa",
+                                      llvm::cl::desc("Enable fuse-sdpa pass"),
+                                      llvm::cl::init(false)};
+    BoolOption enableDecomposeAttention{*this, "decompose-attention",
+                                        llvm::cl::desc("Enable decompose-attention pass"),
+                                        llvm::cl::init(false)};
+    BoolOption enableReshapeMatMulInputs{*this, "reshape-matmul-inputs",
+                                          llvm::cl::desc("Enable reshape-matmul-inputs pass"),
+                                          llvm::cl::init(true)};
 };
 
 //

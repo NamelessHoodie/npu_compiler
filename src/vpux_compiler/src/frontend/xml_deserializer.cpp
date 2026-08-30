@@ -150,6 +150,14 @@ XmlDeserializer::XmlDeserializer(const pugi::xml_node& node, const std::shared_p
                                  const std::unordered_map<ov::DiscreteTypeInfo, ov::BaseOpExtension::Ptr>& extensions,
                                  std::unordered_map<std::string, std::shared_ptr<ov::op::util::Variable>>& variables,
                                  size_t version)
+        : ov::util::XmlDeserializer(node, std::make_shared<ov::util::BufferWeightsProvider>(weights), opsets, extensions, variables, version) {
+}
+
+XmlDeserializer::XmlDeserializer(const pugi::xml_node& node, const std::shared_ptr<ov::util::WeightsProvider>& weights,
+                                 const std::unordered_map<std::string, ov::OpSet>& opsets,
+                                 const std::unordered_map<ov::DiscreteTypeInfo, ov::BaseOpExtension::Ptr>& extensions,
+                                 std::unordered_map<std::string, std::shared_ptr<ov::op::util::Variable>>& variables,
+                                 size_t version)
         : ov::util::XmlDeserializer(node, weights, opsets, extensions, variables, version) {
 }
 
@@ -195,7 +203,7 @@ void XmlDeserializer::set_constant_num_buffer(ov::AttributeAdapter<std::shared_p
 }
 
 std::unique_ptr<ov::util::XmlDeserializer> XmlDeserializer::make_visitor(
-        const pugi::xml_node& node, const std::shared_ptr<ov::AlignedBuffer>& originalWeights,
+        const pugi::xml_node& node, const std::shared_ptr<ov::util::WeightsProvider>& originalWeights,
         const std::unordered_map<std::string, ov::OpSet>& opsets,
         const std::unordered_map<ov::DiscreteTypeInfo, ov::BaseOpExtension::Ptr>& extensions,
         std::unordered_map<std::string, std::shared_ptr<ov::op::util::Variable>>& variables, size_t version) const {

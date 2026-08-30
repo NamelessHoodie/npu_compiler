@@ -50,6 +50,12 @@ public:
                     std::unordered_map<std::string, std::shared_ptr<ov::op::util::Variable>>& variables,
                     size_t version);
 
+    XmlDeserializer(const pugi::xml_node& node, const std::shared_ptr<ov::util::WeightsProvider>& weights,
+                    const std::unordered_map<std::string, ov::OpSet>& opsets,
+                    const std::unordered_map<ov::DiscreteTypeInfo, ov::BaseOpExtension::Ptr>& extensions,
+                    std::unordered_map<std::string, std::shared_ptr<ov::op::util::Variable>>& variables,
+                    size_t version);
+
     /**
      * @brief Looks for the "WeightsPointerAttribute" within the runtime information field and reconstructs the
      * attribute.
@@ -68,7 +74,7 @@ public:
     void set_constant_num_buffer(ov::AttributeAdapter<std::shared_ptr<ov::AlignedBuffer>>& adapter) override;
 
     std::unique_ptr<ov::util::XmlDeserializer> make_visitor(
-            const pugi::xml_node& node, const std::shared_ptr<ov::AlignedBuffer>& originalWeights,
+            const pugi::xml_node& node, const std::shared_ptr<ov::util::WeightsProvider>& originalWeights,
             const std::unordered_map<std::string, ov::OpSet>& opsets,
             const std::unordered_map<ov::DiscreteTypeInfo, ov::BaseOpExtension::Ptr>& extensions,
             std::unordered_map<std::string, std::shared_ptr<ov::op::util::Variable>>& variables,

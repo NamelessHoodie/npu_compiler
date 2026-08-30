@@ -161,7 +161,7 @@ void vpux::IE::arch37xx::buildFinalTransformationPipeline(mlir::OpPassManager& p
     if (options.enableDecomposeAttention) {
         pm.addPass(IE::createDecomposeAttentionPass(log));
     }
-    pm.addPass(IE::createReshapeMatMulInputsPass(options.enableGroupedMatMul, log));
+    pm.addPass(IE::createReshapeMatMulInputsPass(false, log)); // enableGroupedMatMul=false on 37XX
 }
 
 void vpux::IE::arch37xx::buildDefaultHWPipeline(mlir::OpPassManager& pm, const IE::arch37xx::DefaultHWOptions& options,
