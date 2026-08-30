@@ -60,6 +60,13 @@ public:
         overwriteIfUnset(options.enableConvertFFTToConv, false);
         overwriteIfUnset(options.enableDecomposeGRUSequence, false);
         overwriteIfUnset(options.enableConvertToReduceSquare, false);
+
+        // SDPA/Attention fusion — enabled for LLM inference (ported from 40XX pipeline).
+        // FlashSDPA tiling already runs in the common VPU pipeline for 37XX;
+        // these fusions create the fused attention ops for it to tile.
+        overwriteIfUnset(options.enableFlashSDPAConversion, true);
+        overwriteIfUnset(options.enableConvertToAttention, true);
+        overwriteIfUnset(options.enableFuseSoftwareSDPA, true);
     }
 };
 

@@ -141,6 +141,27 @@ void vpux::IE::arch37xx::buildFinalTransformationPipeline(mlir::OpPassManager& p
     pm.addPass(IE::createOptimizeIdentityPoolPass(log));
     pm.addPass(IE::createPropagatePermuteCastPass(log));
     pm.addPass(IE::createMoveDynamicDequantizeToUserPass(log));
+
+    // SDPA/Attention fusion — ported from NPU40XX (buildAttentionProcessingPipeline).
+    // The passes exist in the common IE dialect and the FlashSDPA tiling runs in the
+    // common VPU pipeline, but 37XX never scheduled the fusion that creates the ops.
+    // Without this, attention decomposes into MatMul+Softmax on NPU37XX.
+    const auto grc = getDefaultGreedyRewriteConfig();
+    if (options.enableFlashSDPAConversion) {
+        pm.addPass(IE::createConvertSDPAToFlashSDPAPass(log));
+    }
+    pm.addPass(IE::createResolveStridedSlicePass(log));
+    if (options.enableConvertToAttention) {
+        pm.addPass(IE::createFuseAttentionPass(log));
+        pm.addPass(mlir::createCanonicalizerPass(grc));
+    }
+    if (options.enableFuseSoftwareSDPA) {
+        pm.addPass(IE::createFuseSDPAPass(log));
+    }
+    if (options.enableDecomposeAttention) {
+        pm.addPass(IE::createDecomposeAttentionPass(log));
+    }
+    pm.addPass(IE::createReshapeMatMulInputsPass(options.enableGroupedMatMul, log));
 }
 
 void vpux::IE::arch37xx::buildDefaultHWPipeline(mlir::OpPassManager& pm, const IE::arch37xx::DefaultHWOptions& options,
