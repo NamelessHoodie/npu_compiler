@@ -1,3 +1,5 @@
+#include <cstdio>
+#include <string>
 //
 // Copyright (C) 2022-2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
@@ -54,6 +56,11 @@ public:
         auto symbolName = printToString("{0}{1}_elf", result, argsConcat);
         const auto it = _shaveBinaryResourcesMap.find(symbolName);
 
+        if (FILE* tf = fopen("/tmp/vpux_kernel_trace.log", "a")) {
+            fprintf(tf, "[KERNEL-T] %s : %s\n", std::string(symbolName).c_str(),
+                    it != _shaveBinaryResourcesMap.end() ? "EMBEDDED" : "MISSING");
+            fclose(tf);
+        }
         VPUX_THROW_UNLESS(it != _shaveBinaryResourcesMap.end(), "Can't find 'elf' for kernel symbol '{0}'", symbolName);
 
         const auto [symbolData, symbolSize] = it->second;

@@ -4,6 +4,9 @@
 //
 
 #include "vpux/compiler/act_kernels/shave_binary_resources.h"
+
+#include <cstdlib>
+#include <cstdio>
 #include "vpux/compiler/core/interfaces/dialect_cache.hpp"
 #include "vpux/compiler/dialect/config/IR/utils.hpp"
 #include "vpux/compiler/dialect/core/IR/dialect.hpp"
@@ -37,6 +40,11 @@ llvm::ArrayRef<uint8_t> ShaveBinaryResources::getElf(llvm::StringRef kernelPath)
     auto symbolName = printToString("{0}_elf", kernelPath);
     const auto it = _shaveBinaryResourcesMap.find(symbolName);
 
+    if (FILE* tf = fopen("/tmp/vpux_kernel_trace.log", "a")) {
+        fprintf(tf, "[KERNEL] %s : %s\n", std::string(symbolName).c_str(),
+                it != _shaveBinaryResourcesMap.end() ? "EMBEDDED" : "MISSING");
+        fclose(tf);
+    }
     VPUX_THROW_UNLESS(it != _shaveBinaryResourcesMap.end(), "Can't find 'elf' for kernel symbol '{0}'", symbolName);
 
     const auto [symbolData, symbolSize] = it->second;
