@@ -343,6 +343,15 @@ bool isGatherOpTileAtHighestDim(VPUIP::SwKernelOp swKernelOp) {
     const auto indicesType = mlir::cast<vpux::NDTypeInterface>(swKernelOp->getOperand(1).getType());
     const auto outputType = mlir::cast<vpux::NDTypeInterface>(swKernelOp->getResult(0).getType());
 
+    // Scalar (single-element) indices: width-tiling the gather kernel makes the
+    // prebuilt gather ELF address rows with the TILE width instead of the row
+    // stride (measured: row 22 read as row 11 under 2x128 tiles of [35,256] on
+    // NPU37XX). One un-tiled kernel over the full row is correct; the op is
+    // tiny, so the perf cost is negligible.
+    if (indicesType.getShape().totalSize() == 1) {
+        return false;
+    }
+
     auto args = kernelArgsRange(swKernelOp);
     const auto kernelAxisAttr = mlir::dyn_cast<mlir::IntegerAttr>(args.begin()[0]);
     VPUX_THROW_UNLESS(kernelAxisAttr != nullptr, "Failed to extract axis at '{0}'", swKernelOp->getLoc());

@@ -218,6 +218,18 @@ void StrategyManager::assignMultiClusterStrategy(bool enableMultiClusterForSWLay
                         }
                         return;
                     }
+                    if (auto gatherOp = mlir::dyn_cast<VPU::GatherOp>(origOp.getOperation())) {
+                        // Scalar (single-element) indices: segmented strategies are defined
+                        // in terms of splitting the INDICES across clusters, degenerate for
+                        // one index — the per-cluster index translation selects the WRONG
+                        // row from the distributed data (measured: index 22 read row 11
+                        // under a 2-cluster SEGMENTED buffer on NPU37XX). Force Clustering.
+                        if (getShape(gatherOp.getIndices()).totalSize() == 1) {
+                            _log.trace("GatherOp with scalar indices at {0}: forcing Clustering", origOp->getLoc());
+                            setLayerStrategy(VPU::MultiClusterStrategy::Clustering, origOp.getOperation());
+                            return;
+                        }
+                    }
                     if (mlir::isa<VPU::MaxPool8Op>(origOp)) {
                         auto inputType =
                                 mlir::cast<vpux::NDTypeInterface>(origOp.getOperation()->getOperand(0).getType());

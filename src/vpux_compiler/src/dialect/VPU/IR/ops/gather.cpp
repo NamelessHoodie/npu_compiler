@@ -253,6 +253,17 @@ bool vpux::VPU::GatherOp::checkStrategyCompatibility(VPU::MultiClusterStrategy s
         return false;
     }
 
+    // Scalar (rank-0 / single-element) indices: the segmented distribution modes
+    // are defined in terms of splitting the INDICES across clusters, which is
+    // degenerate for one index — the per-cluster index translation then selects
+    // the WRONG row from the distributed data (measured: global index 22 read as
+    // row 11 under a 2-cluster SEGMENTED buffer). Only Clustering (replicated
+    // data, replicated index) is semantically safe here.
+    const auto indicesShape = getShape(getIndices());
+    if (indicesShape.totalSize() == 1) {
+        return strategy == VPU::MultiClusterStrategy::Clustering;
+    }
+
     return strategy == VPU::MultiClusterStrategy::Clustering ||
            strategy == VPU::MultiClusterStrategy::SplitOverKernel ||
            strategy == VPU::MultiClusterStrategy::SplitOverHeight;
