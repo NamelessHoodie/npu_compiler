@@ -4,6 +4,7 @@
 //
 
 #include "vpux/compiler/frontend/IE.hpp"
+#include "vpux/compiler/frontend/broadcast_const_canonicalization.hpp"
 #include "vpux/compiler/core/attributes/dims_order.hpp"
 #include "vpux/compiler/core/types/quantile_float/dialect.hpp"
 #include "vpux/compiler/core/types/quantile_float/types.hpp"
@@ -5963,6 +5964,11 @@ void NGraphPasses::runNGraphPasses(const std::shared_ptr<ov::Model>& netGraph, m
 
                 return skipKeepConstAndDecompressionForNode(node);
             });
+    // Expand small broadcast constants of elementwise ops BEFORE common
+    // optimizations: the NPU3720 DPU broadcast-eltwise path is ~161x slower
+    // than a dense same-shape multiply (measured: ~0.3 elem/us vs ~50 elem/us),
+    // e.g. RMSNorm gamma multiplies at ~5ms each.
+    manager.register_pass<vpux::BroadcastConstCanonicalization>();
     manager.register_pass<ov::pass::SharedOpOptimization>();
     manager.register_pass<ov::pass::ConvertQuantizeDequantize>();
     manager.register_pass<ov::pass::ConstantFolding>();
