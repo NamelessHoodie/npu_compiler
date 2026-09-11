@@ -150,6 +150,9 @@ else()
         list(APPEND CMAKE_PREFIX_PATH ${PROJECT_BINARY_DIR}/lib/cmake/mlir)
         # When vpux-plugin is added as OPENVINO_EXTRA_MODULES, MLIRConfig.cmake is under this dir
         list(APPEND CMAKE_PREFIX_PATH ${OpenVINO_BINARY_DIR}/lib/cmake/mlir)
+        # When openvino itself is a subdirectory of a parent graph (one-graph
+        # superrepo), the llvm subproject generates MLIRConfig at the graph root
+        list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR}/lib/cmake/mlir)
         # When vpux-plugin is added in monorepo, MLIRConfig.cmake is under this dir
         if(ENABLE_NPU_MONO)
             if(NOT DEFINED NPU_MONO_BUILD_DIR)
