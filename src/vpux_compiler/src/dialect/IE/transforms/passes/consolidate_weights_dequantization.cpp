@@ -300,6 +300,14 @@ mlir::LogicalResult WeightsDequantizeRewriter<ConcreteOp>::dynamicMatchAndRewrit
         // hoist Gather before QuantizeCast without breaking the per-axis type dimension constraint.
         scale = wdInfo.getStaticScale();
     }
+    if (scale == nullptr) {
+        // SPATIAL/funcall function slicing can move the scale producer out of
+        // this function; with no resolvable scale in-function this pattern
+        // cannot apply. Bail cleanly instead of emitting a dangling operand
+        // (a null Value here segfaults OpOperand construction).
+        _log.trace("Match failed: dequantization scale not resolvable in-function.");
+        return mlir::failure();
+    }
 
     auto inputValue = rewriter.create<IE::QuantizeCastOp>(loc, IE::getTrueInputValue(origOp, rewriter), quantElemType)
                               .getOutput();
