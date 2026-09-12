@@ -88,11 +88,19 @@ bool canonicalizeEltwise(const std::shared_ptr<ov::Node>& node, size_t& numRepla
         return false;
     }
     for (size_t in = 0; in < 2; ++in) {
+        // dynamic-shape guard FIRST: get_input_shape() throws to_shape()
+        // on dynamic partial shapes (raw-plugin path never statically
+        // reshapes before this pass)
+        for (size_t i = 0; i < node->get_input_size(); ++i) {
+            if (!node->get_input_partial_shape(i).is_static()) {
+                return false;
+            }
+        }
+        if (!node->get_output_partial_shape(0).is_static()) {
+            return false;
+        }
         const auto other = 1 - in;
         const auto& bigShape = node->get_input_shape(other);
-        if (!node->get_input_partial_shape(other).is_static() || !node->get_output_partial_shape(0).is_static()) {
-            continue;  // skip dynamic shapes
-        }
         const auto cnst = ov::as_type_ptr<ov::op::v0::Constant>(node->get_input_node_shared_ptr(in));
         if (cnst == nullptr) {
             continue;
