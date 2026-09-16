@@ -26,6 +26,14 @@ cmake_policy(SET CMP0048 NEW)
 
 project(VPUX)
 
+# Debug builds carry the developer features: IR dumping at pass boundaries
+# (IE_NPU_IR_PRINT_TO_FILE_TREE), VPUX_DEVELOPER_BUILD gates. The fold-hunt
+# and lowering-debugging tooling lives behind these gates — without them the
+# developer config is a compiled-out stub (2026-09-16 night lesson).
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT DEFINED ENABLE_DEVELOPER_BUILD)
+    set(ENABLE_DEVELOPER_BUILD ON)
+endif()
+
 #
 # Build properties
 #
