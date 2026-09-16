@@ -614,6 +614,12 @@ mlir::OwningOpRef<mlir::ModuleOp> compileModel(mlir::MLIRContext& ctx, const std
 
     checkDataTypes(model, config);
 
+    // Lazy constant folding on the default path too: eager folding at import
+    // materializes packed-weight chains (MP-OSSQ int4 double-decker, i4+FQ
+    // weights) into full-size constants before any lowering can keep them
+    // packed. The WS path already proved lazy folding works for LLM graphs.
+    Const::setLazyFoldingOptions(&ctx, Const::getWsFoldingOptions());
+
     mlir::OwningOpRef<mlir::ModuleOp> module =
             importNetwork(&ctx, model, originalParameters, originalResults, config, devConf, rootTiming, log,
                           /*enableWeightsSeparationPath=*/false);
