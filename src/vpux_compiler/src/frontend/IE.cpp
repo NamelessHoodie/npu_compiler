@@ -5884,6 +5884,11 @@ static void addCommonOptimizationsPasses(ov::pass::Manager& manager, const Impor
     manager.register_pass<ov::pass::SliceToStridedSlice>(true);
 
     // CF is required after all decompositions
+    // MP-OSSQ int4 double-decker: mark nibble-unpack chains BEFORE any CF,
+    // else ConstantFolding decompresses them back into full-size constants
+    // and the packed weights never reach the blob (measured 3.787 GB).
+    manager.register_pass<ov::pass::MarkDeckSubgraph>();
+
     manager.register_pass<ov::pass::ConstantFolding>();
 
     // LinOpSequenceFusion must be executed after all decompositions
@@ -5971,6 +5976,10 @@ void NGraphPasses::runNGraphPasses(const std::shared_ptr<ov::Model>& netGraph, m
     manager.register_pass<vpux::BroadcastConstCanonicalization>();
     manager.register_pass<ov::pass::SharedOpOptimization>();
     manager.register_pass<ov::pass::ConvertQuantizeDequantize>();
+    // MP-OSSQ int4 double-decker: mark nibble-unpack chains BEFORE any CF in
+    // the canonical pipeline, else ConstantFolding decompresses them back into
+    // full-size constants and the packed weights never reach the blob.
+    manager.register_pass<ov::pass::MarkDeckSubgraph>();
     manager.register_pass<ov::pass::ConstantFolding>();
     manager.register_pass<ov::pass::ConvertScatterElementsUpdate12ToScatterElementsUpdate3>();
     manager.register_pass<ov::pass::ConvertInterpolate1ToInterpolate4>();

@@ -173,6 +173,15 @@ endif()
 
 add_subdirectory(thirdparty EXCLUDE_FROM_ALL)
 
+# DAG repair for the bundled LLVM: mlir's ArithToAMDGPU includes
+# VectorTransformsEnums.h.inc without depending on its generator
+# (MLIRVectorTransformsIncGen) — a fresh parallel build races the tablegen
+# and dies on the missing include. We do not edit LLVM; we repair the edge
+# from our side.
+if(TARGET MLIRArithToAMDGPU AND TARGET MLIRVectorTransformsIncGen)
+    add_dependencies(MLIRArithToAMDGPU MLIRVectorTransformsIncGen)
+endif()
+
 if(ENABLE_DEVELOPER_BUILD)
     add_compile_definitions(VPUX_DEVELOPER_BUILD)
 endif()
