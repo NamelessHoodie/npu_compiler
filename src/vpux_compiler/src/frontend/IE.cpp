@@ -5979,7 +5979,13 @@ void NGraphPasses::runNGraphPasses(const std::shared_ptr<ov::Model>& netGraph, m
     // MP-OSSQ int4 double-decker: mark nibble-unpack chains BEFORE any CF in
     // the canonical pipeline, else ConstantFolding decompresses them back into
     // full-size constants and the packed weights never reach the blob.
-    manager.register_pass<ov::pass::MarkDeckSubgraph>();
+    // G4VLM_DECK_REWRITE=0 disables the i4+FQ rewrite (keeps stamping) — the
+    // plain floor-unpack chains init-capture cleanly under weights separation
+    // (champion receipt); the FQ form may block WS analysis.
+    if (!std::getenv("G4VLM_DECK_REWRITE") ||
+        std::string(std::getenv("G4VLM_DECK_REWRITE")) != "0") {
+        manager.register_pass<ov::pass::MarkDeckSubgraph>();
+    }
     manager.register_pass<ov::pass::ConstantFolding>();
     manager.register_pass<ov::pass::ConvertScatterElementsUpdate12ToScatterElementsUpdate3>();
     manager.register_pass<ov::pass::ConvertInterpolate1ToInterpolate4>();

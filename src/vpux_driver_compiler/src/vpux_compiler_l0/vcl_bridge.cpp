@@ -389,6 +389,28 @@ DLLEXPORT vcl_result_t vclAllocatedExecutableCreateWSOneShot(vcl_compiler_handle
     return allocatedExecutableCreateWSOneShot(compiler, desc, allocator);
 }
 
+// v2 parity for the plugin's WSOneShot entry (newer plugin headers require
+// this symbol): identical compile — blobs land in the vcl_allocator2 — plus
+// the executable handle the plugin uses ONLY for its optional
+// compatibility-string query. The dummy executable reports an empty string
+// -> UNSUPPORTED_FEATURE -> the plugin logs "will be absent" and continues.
+DLLEXPORT vcl_result_t vclAllocatedExecutableCreateWSOneShot2(vcl_compiler_handle_t compiler, vcl_executable_desc_t desc,
+                                                              vcl_allocator2_t* allocator,
+                                                              vcl_executable_handle_t* executable) {
+    if (!executable) {
+        return VCL_RESULT_ERROR_INVALID_ARGUMENT;
+    }
+    *executable = nullptr;
+    const auto ret = allocatedExecutableCreateWSOneShot(compiler, desc, allocator);
+    if (ret != VCL_RESULT_SUCCESS) {
+        return ret;
+    }
+    VPUXDriverCompiler::VPUXCompilerL0* pCompiler = reinterpret_cast<VPUXDriverCompiler::VPUXCompilerL0*>(compiler);
+    auto* dummy = new VPUXDriverCompiler::VPUXExecutableL0(std::string(""), pCompiler->getLogger());
+    *executable = reinterpret_cast<vcl_executable_handle_t>(dummy);
+    return VCL_RESULT_SUCCESS;
+}
+
 DLLEXPORT vcl_result_t vclExecutableGetSerializableBlob(vcl_executable_handle_t executable, uint8_t* blobBuffer,
                                                         uint64_t* blobSize) {
     vcl_result_t ret = VCL_RESULT_SUCCESS;
